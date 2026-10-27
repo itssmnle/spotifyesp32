@@ -1,6 +1,10 @@
 # spotifyesp32
 
-A desktop companion built for ESP32 microcontrollers. When your desk is quiet, it functions as a minimalist, clock and weather dashboard. The second you hit play on Spotify, it instantly transforms into an interactive live music visualizer with album art, marquee titles, and live track progress tracking.
+A desktop companion built for ESP32 microcontrollers. When your desk is quiet, it functions as a minimalist, clock and weather dashboard. The second you hit play on Spotify, it instantly transforms into an interactive live music visualiser with album art, marquee titles, and song progress tracking.
+
+
+<img width="320" height="240" alt="Clock screen" src="https://github.com/user-attachments/assets/f1ece82e-c72a-43c1-ac5e-0219d406e920" />
+<img width="320" height="240" alt="Visualiser screen" src="https://github.com/user-attachments/assets/36cbfe6f-e715-4857-8943-e96b4f9ffc43" />
 
 ---
 
@@ -84,3 +88,12 @@ Before uploading, you must configure the `TFT_eSPI` library to match your displa
       * wifiMulti.addAP("SSID", "PASSWD"); - There will be 2, first will be your primary.
 
 4. Configure the board and port, then upload the sketch and you should be done!
+
+---
+
+I've also added an enclosure design I made for the 2.8" model of the CYD (2432S028) if any of you would like it.
+M2 screws to hold them together, and I attached both case faces for USB-C and microUSB.
+
+
+<img width="1227" height="668" alt="Fusion 360 face" src="https://github.com/user-attachments/assets/c1f38fc3-7e06-4c4b-94ef-e9d131b82a57" />
+<img width="1024" height="768" alt="The case IRL!" src="https://github.com/user-attachments/assets/fc9a5ee0-a58b-467a-b807-c4b6156f3441" />
