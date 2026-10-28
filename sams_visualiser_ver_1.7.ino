@@ -25,11 +25,11 @@ char refreshToken[] = "YOUR_SPOTIFY_REFRESH_TOKEN";
 
 // --- OPENWEATHERMAP & TIMEZONE CONFIG ---
 // Create a free account at https://openweathermap.org/ to get an API key
-const char* openWeatherApiKey = "YOUR_OPENWEATHER_API_KEY";
-String weatherCity            = "YOUR_CITY_NAME"; // e.g., "London", "Tokyo", "New York"
+const char* openWeatherApiKey = "YOUR_OPENWEATHER_API_KEY"; 
+String weatherCity            = "YOUR_CITY_NAME"; // e.g., London
 
-// UTC offset in seconds (e.g., GMT+7 = 25200, GMT+0 = 0, GMT-5 = -18000)
-const long utcOffsetInSeconds = 25200; 
+// UTC offset in seconds
+const long utcOffsetInSeconds = 0; 
 
 // --- HARDWARE TOUCH PINS (ESP32 CYD Defaults) ---
 #define XPT2046_IRQ  36
@@ -50,26 +50,30 @@ const long utcOffsetInSeconds = 25200;
 
 #define HEADER_H 26
 
-#define ART_SIZE 135
+// Perfectly matched to 300x300 album art scaled by 2 (150x150)
+#define ART_SIZE 150
 #define ART_X    12
-#define ART_Y    36
+#define ART_Y    34
 
-#define TEXT_X0 (ART_X + ART_SIZE + 12)
+#define TEXT_X0 (ART_X + ART_SIZE + 10)
 #define TEXT_X1 (SCR_W - 12)
 
 // Vertical layout alignments for Spotify player elements
-#define TITLE_Y       (ART_Y + 16)
+#define TITLE_Y       (ART_Y + 4)
 #define ARTIST_Y      (TITLE_Y + 34)
-#define ALBUM_Y       (ARTIST_Y + 24)
-#define PAUSE_BADGE_Y (ALBUM_Y + 28)
+#define ALBUM_Y       (ARTIST_Y + 22)
+#define PAUSE_BADGE_Y (ALBUM_Y + 22)
 
-#define TIME_TEXT_Y 188
-#define BAR_Y       204
+#define TIME_TEXT_Y 194
+#define BAR_Y       210
 #define BAR_H       6
 #define BAR_X       15
 #define BAR_W       (SCR_W - BAR_X * 2)
 
 #define MAX_IMAGE_SIZE 40000
+
+// Pre-allocated global buffer to prevent heap fragmentation / crashes over time
+uint8_t jpgBuffer[MAX_IMAGE_SIZE];
 
 // --- COLOR PALETTE ---
 uint16_t COLOR_WHITE         = TFT_WHITE;
@@ -223,7 +227,7 @@ void setup() {
   ts.begin(touchSpi);
   ts.setRotation(1);
 
-  // --- HARDCODED PREFERRED NETWORKS (OPTIONAL) ---
+  // --- PREFERRED NETWORKS ---
   wifiMulti.addAP("YOUR_PRIMARY_SSID", "YOUR_PRIMARY_PASSWORD");
   wifiMulti.addAP("YOUR_SECONDARY_SSID", "YOUR_SECONDARY_PASSWORD");
 
@@ -371,13 +375,13 @@ void drawHeader() {
   tft.setTextSize(1);
   tft.setTextColor(TFT_MAGENTA, TFT_BLACK);
   tft.setTextDatum(ML_DATUM);
-  tft.drawString("sam's buddy | v1.6", 10, HEADER_H / 2);
+  tft.drawString("sam's buddy | v1.7", 10, HEADER_H / 2);
 
   // Right header readout
   tft.setTextColor(COLOR_SPOTIFY_GREEN, TFT_BLACK);
   tft.setTextDatum(MR_DATUM);
   if (currentScreen == CLOCK_WEATHER_MODE) {
-    tft.drawString("version 1.6", SCR_W - 10, HEADER_H / 2);
+    tft.drawString("version 1.7", SCR_W - 10, HEADER_H / 2);
   } else {
     tft.drawString(getSpotifyHeaderDateTime(), SCR_W - 10, HEADER_H / 2);
   }
@@ -462,7 +466,7 @@ void fetchWeather() {
 
 void drawPausedBadge() {
   int colWidth = TEXT_X1 - TEXT_X0;
-  tft.fillRect(TEXT_X0, PAUSE_BADGE_Y, colWidth, 20, COLOR_BG);
+  tft.fillRect(TEXT_X0, PAUSE_BADGE_Y, colWidth, 18, COLOR_BG);
   if (!isPlaying) {
     tft.fillRoundRect(TEXT_X0, PAUSE_BADGE_Y, 70, 18, 3, TFT_ORANGE);
     tft.setTextColor(TFT_BLACK, TFT_ORANGE);
@@ -722,11 +726,6 @@ void drawCover(const char *url) {
 
   int contentLength = https.getSize();
   size_t capacity = (contentLength > 0 && contentLength < MAX_IMAGE_SIZE) ? (size_t)contentLength : MAX_IMAGE_SIZE;
-  uint8_t *jpgBuffer = (uint8_t *)malloc(capacity);
-  if (jpgBuffer == nullptr) {
-    https.end();
-    return;
-  }
 
   WiFiClient *stream = https.getStreamPtr();
   size_t received = 0;
@@ -749,7 +748,6 @@ void drawCover(const char *url) {
   https.end();
 
   if (received < 2 || jpgBuffer[0] != 0xFF || jpgBuffer[1] != 0xD8) {
-    free(jpgBuffer);
     return;
   }
 
@@ -770,7 +768,6 @@ void drawCover(const char *url) {
     tft.fillRect(ART_X, ART_Y, ART_SIZE, ART_SIZE, TFT_BLACK);
     TJpgDec.drawJpg(drawX, drawY, jpgBuffer, received);
   }
-  free(jpgBuffer);
 }
 
 // ==========================================
@@ -837,11 +834,6 @@ void drawCoverFullscreen(const char *url) {
 
   int contentLength = https.getSize();
   size_t capacity = (contentLength > 0 && contentLength < MAX_IMAGE_SIZE) ? (size_t)contentLength : MAX_IMAGE_SIZE;
-  uint8_t *jpgBuffer = (uint8_t *)malloc(capacity);
-  if (jpgBuffer == nullptr) {
-    https.end();
-    return;
-  }
 
   WiFiClient *stream = https.getStreamPtr();
   size_t received = 0;
@@ -864,7 +856,6 @@ void drawCoverFullscreen(const char *url) {
   https.end();
 
   if (received < 2 || jpgBuffer[0] != 0xFF || jpgBuffer[1] != 0xD8) {
-    free(jpgBuffer);
     return;
   }
 
@@ -885,5 +876,4 @@ void drawCoverFullscreen(const char *url) {
     tft.fillRect(FS_ART_X, FS_ART_Y, FS_ART_SIZE, FS_ART_SIZE, TFT_BLACK);
     TJpgDec.drawJpg(drawX, drawY, jpgBuffer, received);
   }
-  free(jpgBuffer);
 }
